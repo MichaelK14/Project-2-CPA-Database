@@ -1,0 +1,188 @@
+>>> malloy
+import "wa_cpa.malloy"
+
+>>> markdown
+# Washington State CPAs: Who's Keeping the Books — And For How Long?
+
+I opened this dataset with one question: **how many active CPAs does Washington State actually have?**
+The answer surprised me — and then led to a much bigger question about the *future* of the profession here.
+
+---
+
+## Part 1: The Big Picture
+
+Over 50,000 credential records, but how many are actually practicing today?
+
+>>> malloy
+run: cpa -> overall_snapshot
+
+>>> markdown
+Only **51%** are actively licensed. The other half have lapsed, retired, or gone inactive.
+Let's see the full breakdown visually:
+
+>>> malloy
+# bar_chart
+run: cpa -> status_breakdown
+
+>>> markdown
+---
+
+## Part 2: The Licensing Surge — Is the Pipeline Healthy?
+
+New CPA licenses have been climbing every year since 2015. Is this a sign of a healthy, growing profession?
+
+>>> malloy
+# line_chart
+run: cpa -> licenses_by_year
+
+>>> markdown
+The trend is unmistakably upward — **2025 hit the highest single-year count** in the dataset with over 2,000 new licenses.
+Washington's tech economy is clearly pulling in financial talent.
+
+But new licenses don't tell the whole story. For each cohort (year of licensure), how many people are still active
+versus how many lapsed or retired?
+
+>>> malloy
+# line_chart
+run: cpa -> pipeline_health
+
+>>> markdown
+This is the pipeline health view. For older cohorts, lapsed and retired counts naturally climb over time.
+The **active retention rate** tells an even clearer story:
+
+>>> malloy
+# line_chart
+run: cpa -> cohort_active_rate
+
+>>> markdown
+Recent cohorts (2018–2022) have **80–86% active rates** — very healthy. But older cohorts from 2010 drop
+to 63–70% active. This is expected attrition, but it raises the question: as those veterans retire,
+is the new pipeline large enough to replace them?
+
+---
+
+## Part 3: The Retirement Cliff — A Looming Shortage?
+
+Here's where things get interesting. I looked at the **age distribution of the active workforce**
+by how long each CPA has been licensed:
+
+>>> malloy
+# bar_chart
+run: cpa -> active_by_tenure
+
+>>> markdown
+The workforce skews young — over **8,500 active CPAs have been licensed less than 5 years**.
+That's a strong entry pipeline. But there's a meaningful bulge in the **20+ year** categories too:
+these are the senior practitioners who may be approaching retirement in the next 5–10 years.
+
+The summary numbers make this concrete:
+
+>>> malloy
+run: cpa -> near_retirement_count
+
+>>> markdown
+**Over 5,100 active CPAs** — roughly 20% of the active workforce — have been licensed for 20 or more years.
+That's a significant cohort that could start retiring within the next decade.
+
+Now look at when current active licenses actually expire:
+
+>>> malloy
+# bar_chart
+run: cpa -> expiring_licenses
+
+>>> markdown
+Nearly **18,000 active licenses expire in 2027 and 2028 alone**. While most of these will simply renew,
+this two-year renewal cliff represents the moment where retirement decisions get made.
+If even 10–15% of those 20+ year veterans choose not to renew, Washington loses 1,500–2,500 experienced CPAs
+in a very short window.
+
+**So is there a shortage coming?** The data suggests: *not yet, but watch closely.*
+New licenses are being issued at record rates (~2,000/year), but they take years to build the experience
+that retiring veterans carry. The profession may not face a headcount shortage, but likely faces an
+**experience gap** — a wave of senior practitioners leaving while newer CPAs are still building skills.
+
+---
+
+## Part 4: The Japan Surprise — Pacific Rim Ties
+
+Shifting gears: when I sorted by country, I expected California and Oregon to dominate.
+Then *Japan* appeared as the **#3 country** in the entire dataset.
+
+>>> malloy
+# bar_chart
+run: cpa -> international_by_country
+
+>>> markdown
+Japan has over **5,300 credential holders** — more than Canada, more than China.
+The full Pacific Rim picture is remarkable:
+
+>>> malloy
+# bar_chart
+run: cpa -> pacific_rim_countries
+
+>>> markdown
+Japan, South Korea, Hong Kong, China, Taiwan, and Singapore together account for the vast majority
+of international credential holders. Washington State's CPA registry functions as a
+**credentialing hub for Pacific Rim financial professionals** operating in North American markets.
+
+Not all of those international credentials are actively maintained, though:
+
+>>> malloy
+# bar_chart
+run: cpa -> active_rate_by_country
+
+>>> markdown
+Countries with ongoing business relationships with Washington show high active rates;
+countries where CPAs may have been stationed temporarily show much lower renewal rates.
+
+---
+
+## Part 5: Who's Practicing Remotely?
+
+Within the US, Washington's substantial equivalency rules let CPAs licensed elsewhere practice in the state.
+Which states send the most practitioners?
+
+>>> malloy
+# bar_chart
+run: cpa -> out_of_state_us
+
+>>> markdown
+**California dominates** — nearly 2,600 CA-licensed CPAs appear in this dataset. Oregon and Texas follow.
+The tech corridor between San Francisco and Seattle is clearly generating significant cross-state accounting work.
+
+Here's the full US state geographic picture:
+
+>>> malloy
+# bar_chart
+run: cpa -> by_us_state
+
+>>> markdown
+---
+
+## Part 6: Disciplinary Record
+
+Finally — how often do things go wrong?
+
+>>> malloy
+run: cpa -> disciplinary_actions
+
+>>> markdown
+Fewer than **200 total disciplinary cases** out of 50,000+ records. The Washington Board of Accountancy
+keeps a clean house — and the `Board Order` column in the raw data links directly to public PDFs
+for every case on record.
+
+---
+
+## What I Learned
+
+Starting from a simple headcount question, the data revealed:
+
+- Only half of credential holders are actually practicing today
+- New licensing is accelerating — 2025 hit a record high
+- ~20% of the active workforce has 20+ years tenure — a retirement wave is building
+- The 2027–2028 renewal window is the critical inflection point to watch
+- Japan is the single largest international presence — a reflection of Pacific Rim economic ties
+- California CPAs are the biggest out-of-state group practicing in Washington
+- The profession faces an *experience gap* more than a raw headcount shortage
+
+**See README.md for the full "So What" analysis and who these findings matter to.**

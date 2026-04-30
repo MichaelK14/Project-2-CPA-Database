@@ -1,0 +1,215 @@
+// Washington State Certified Public Accountants
+// Source: Washington State Board of Accountancy (April 2026)
+// Dataset: 50,460 CPA credential records
+
+source: cpa is duckdb.table('wa_cpa.csv') extend {
+
+  // ── Dimensions ──────────────────────────────────────────────────────────────
+  dimension: full_name is concat(`First Name`, ' ', `Last Name`)
+  dimension: issue_year is `IssueYear`
+  dimension: exp_year is `ExpYear`
+  dimension: is_active is `Status` = 'Licensed to practice public accounting'
+  dimension: is_lapsed is `Status` ~ r'Lapsed'
+  dimension: is_retired is `Status` ~ r'Retired'
+  dimension: is_disciplined is `Status` ~ r'Board Order' or `Status` ~ r'Revoked' or `Status` ~ r'Suspended'
+  dimension: is_international is `Country` != 'United States'
+  dimension: is_wa_based is `State` = 'WA'
+
+  dimension: tenure_years is 2026 - `IssueYear`
+
+  dimension: tenure_bucket is
+    pick '0–5 years'   when tenure_years < 5
+    pick '5–10 years'  when tenure_years < 10
+    pick '10–15 years' when tenure_years < 15
+    pick '15–20 years' when tenure_years < 20
+    pick '20–25 years' when tenure_years < 25
+    pick '25–30 years' when tenure_years < 30
+    pick '30–40 years' when tenure_years < 40
+    else '40+ years'
+
+  dimension: status_simple is
+    pick 'Active'      when `Status` = 'Licensed to practice public accounting'
+    pick 'Inactive'    when `Status` ~ r'Inactive'
+    pick 'Lapsed'      when `Status` ~ r'Lapsed'
+    pick 'Retired'     when `Status` ~ r'Retired'
+    pick 'Disciplined' when `Status` ~ r'Suspended' or `Status` ~ r'Revoked'
+    else 'Other'
+
+  // ── Measures ────────────────────────────────────────────────────────────────
+  measure: total_cpas         is count()
+  measure: active_cpas        is count() { where: is_active }
+  measure: lapsed_cpas        is count() { where: is_lapsed }
+  measure: retired_cpas       is count() { where: is_retired }
+  measure: international_cpas is count() { where: is_international }
+  measure: wa_based_cpas      is count() { where: is_wa_based }
+  measure: disciplined_cpas   is count() { where: is_disciplined }
+  measure: pct_active         is active_cpas / total_cpas * 100
+  measure: pct_international  is international_cpas / total_cpas * 100
+  measure: avg_tenure         is avg(tenure_years) { where: is_active }
+
+
+  // ── View 1: Overall snapshot ──────────────────────────────────────────────
+  view: overall_snapshot is {
+    aggregate:
+      total_cpas
+      active_cpas
+      lapsed_cpas
+      retired_cpas
+      disciplined_cpas
+      pct_active
+      pct_international
+  }
+
+
+  // ── View 2: Status breakdown ──────────────────────────────────────────────
+  // # bar_chart
+  view: status_breakdown is {
+    group_by: status_simple
+    aggregate: total_cpas
+    order_by: total_cpas desc
+  }
+
+
+  // ── View 3: Licensing trend by year ──────────────────────────────────────
+  // # line_chart
+  view: licenses_by_year is {
+    group_by: issue_year
+    aggregate: total_cpas
+    where: issue_year >= 2000 and issue_year <= 2025
+    order_by: issue_year asc
+  }
+
+
+  // ── View 4: New licenses vs attrition per cohort year ────────────────────
+  // Shows for each graduating class: how many went active vs lapsed vs retired
+  // # line_chart
+  view: pipeline_health is {
+    group_by: issue_year
+    aggregate:
+      total_cpas
+      lapsed_cpas
+      retired_cpas
+    where: issue_year >= 2005 and issue_year <= 2022
+    order_by: issue_year asc
+  }
+
+
+  // ── View 5: Active retention rate by cohort year ──────────────────────────
+  // Older cohorts naturally have lower active rates — this shows the lapse curve
+  // # line_chart
+  view: cohort_active_rate is {
+    group_by: issue_year
+    aggregate: pct_active
+    where: issue_year >= 2005 and issue_year <= 2022
+    order_by: issue_year asc
+  }
+
+
+  // ── View 6: Active CPAs by tenure (workforce age distribution) ────────────
+  // A large bar in 0–5 years = healthy pipeline; large bar in 20+ = retirement risk
+  // # bar_chart
+  view: active_by_tenure is {
+    group_by: tenure_bucket
+    aggregate: active_cpas
+    order_by: tenure_bucket asc
+  }
+
+
+  // ── View 7: Near-retirement risk summary ──────────────────────────────────
+  view: near_retirement_count is {
+    aggregate:
+      total_active      is active_cpas
+      veteran_cpas      is count() { where: is_active and tenure_years >= 20 }
+      near_retirement_pct is count() { where: is_active and tenure_years >= 20 } / active_cpas * 100
+      avg_tenure
+  }
+
+
+  // ── View 8: Expiring licenses 2026–2030 (renewal cliff) ──────────────────
+  // Every active license expires on a 2-year cycle; this shows the renewal wave
+  // # bar_chart
+  view: expiring_licenses is {
+    group_by: exp_year
+    aggregate: active_cpas
+    where: is_active and exp_year >= 2026 and exp_year <= 2030
+    order_by: exp_year asc
+  }
+
+
+  // ── View 9: Geographic breakdown — US states ──────────────────────────────
+  // # bar_chart
+  view: by_us_state is {
+    group_by: `State`
+    aggregate:
+      total_cpas
+      active_cpas
+      pct_active
+    where: `Country` = 'United States' and `State` != null
+    order_by: total_cpas desc
+    limit: 15
+  }
+
+
+  // ── View 10: International CPAs by country ─────────────────────────────────
+  // # bar_chart
+  view: international_by_country is {
+    group_by: `Country`
+    aggregate:
+      total_cpas
+      active_cpas
+      pct_active
+    where: `Country` != 'United States' and `Country` != null
+    order_by: total_cpas desc
+    limit: 15
+  }
+
+
+  // ── View 11: Pacific Rim concentration ────────────────────────────────────
+  // # bar_chart
+  view: pacific_rim_countries is {
+    group_by: `Country`
+    aggregate:
+      total_cpas
+      active_cpas
+      pct_active
+    where: `Country` = 'Japan' or `Country` = 'Korea, South' or `Country` = 'Hong Kong'
+         or `Country` = 'China' or `Country` = 'Taiwan' or `Country` = 'Singapore'
+    order_by: total_cpas desc
+  }
+
+
+  // ── View 12: Active rate by country (international, 50+ total) ────────────
+  // # bar_chart
+  view: active_rate_by_country is {
+    group_by: `Country`
+    aggregate:
+      total_cpas
+      active_cpas
+      pct_active
+    where: `Country` != 'United States' and `Country` != null
+    having: total_cpas >= 50
+    order_by: pct_active desc
+  }
+
+
+  // ── View 13: Out-of-state US practitioners ────────────────────────────────
+  // # bar_chart
+  view: out_of_state_us is {
+    group_by: `State`
+    aggregate:
+      total_cpas
+      active_cpas
+    where: `Country` = 'United States' and `State` != 'WA' and `State` != null
+    order_by: total_cpas desc
+    limit: 15
+  }
+
+
+  // ── View 14: Disciplinary actions ─────────────────────────────────────────
+  view: disciplinary_actions is {
+    group_by: `Status`
+    aggregate: total_cpas
+    where: is_disciplined
+  }
+
+}
