@@ -6,6 +6,8 @@ This repository analyzes Washington State CPA licensing data
 
 I chose to look at this database because I plan to become a CPA in Washington state. There is a lot of talk about a nationwide shortage of CPAs, and it is going to be a problem. I wanted to look at this data set and try to find out if this is true for Washington. 
 
+Some of my main takeaways are that there are going to be a lot of retiring CPAs in the near future. This is a good thing for someone like me, but based on this data, a lot of people are only practicing CPAs for 5 years of their career. In the future, this could lead to a shortage of CPAs in Washington. The WA CPA board has been making changes to prevent this by making it easier to get a CPA license in Washington. The amount of work and industry in the state of Washington will continue to stay the same, so if more and more CPAs are retiring, that means there will be a need for people to pick up that work. I think the state of Washington is doing the right thing by trying to get more CPAs practicing in the state because there is going to be a great need for them in the coming 10 years.  
+
 The first thing that I found out about this data set is that only about half of the people on it are practicing CPAs. The other half either lapsed their certification or have retired.
 <img width="865" height="271" alt="View 2" src="https://github.com/user-attachments/assets/24f2a8a3-718c-42a7-8311-f3bcd28f3ef0" />
 
